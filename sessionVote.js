@@ -4,6 +4,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('sessionvote')
         .setDescription('Starts a vote to begin an ER:LC session.'),
+
     async execute(interaction) {
         try {
             // First embed (Banner Only)
@@ -33,9 +34,10 @@ module.exports = {
 
             const row = new ActionRowBuilder().addComponents(voteButton);
 
-            // Send the initial message (without @everyone)
+            // Send the initial message with @everyone ping
             const targetChannel = interaction.client.channels.cache.get('1335385442752925731');
             const message = await targetChannel.send({
+                content: '@everyone || <@1335385325681250498>',
                 embeds: [bannerEmbed, voteEmbed],
                 components: [row]
             });
@@ -43,7 +45,7 @@ module.exports = {
             // Set to track users who have voted
             const votedUsers = new Set();
             let voteCount = 0;
-            const voteThreshold = 5; // Adjust this if needed
+            const voteThreshold = 2; // Change this to 5 to require 5 votes
 
             // Button interaction collector
             const filter = i => i.customId === 'vote' && i.message.id === message.id;
@@ -91,7 +93,7 @@ module.exports = {
                         components: [rowDisabled]
                     });
 
-                    // Edit the existing message instead of sending a new one
+                    // Notify the server that the session will begin
                     await message.reply({
                         embeds: [
                             new EmbedBuilder()
@@ -100,7 +102,7 @@ module.exports = {
                         ]
                     });
 
-                    collector.stop(); // Stop collecting votes
+                    collector.stop(); // Stop collecting votes once threshold is met
                 } else {
                     // Continue updating the vote count in the original message
                     await message.edit({ embeds: [bannerEmbed, updatedVoteEmbed] });
